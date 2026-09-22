@@ -1,0 +1,27 @@
+{
+  "capturedAt": "2026-09-22T03:37:19.405Z",
+  "completedAt": "2026-09-22T03:37:20.672Z",
+  "network": "hoodi",
+  "megapoolAddress": "0x0f3db18b8e7c152b50f96e0f4c0ee72188656a3b",
+  "validatorSlot": 1,
+  "beaconIndexQueried": "0xb91bc25f6e241637edfc214de551148690c25a0a8ab033c8d4ea69f26b9e70be103f6318d8163ab9cbb39b4568b4c000",
+  "elRpcUrl": "https://ethereum-hoodi-rpc.publicnode.com",
+  "clRpcUrl": "https://ethereum-hoodi-beacon-api.publicnode.com",
+  "elBlockTag": "latest",
+  "executionBlock": 3671709,
+  "finalizedEpoch": 124567,
+  "overallStatus": "INCONCLUSIVE",
+  "ruleId": "RECON-008",
+  "files": [
+    "capture-metadata.json",
+    "el-block-number.json",
+    "el-validator-count.json",
+    "el-validator-1.json",
+    "cl-finalized-header.json",
+    "cl-validator-0xb91bc25f6e241637edfc214de551148690c25a0a8ab033c8d4ea69f26b9e70be103f6318d8163ab9cbb39b4568b4c000.json",
+    "snapshot.json",
+    "report.json",
+    "report.md",
+    "report.terminal.txt"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "network": "holesky",
+    "megapoolAddress": "0x1111111111111111111111111111111111111111",
+    "validatorId": "v-queued-002",
+    "executionBlock": 2500105,
+    "protocolVersion": "saturn-1",
+    "explorerBaseUrl": "https://holesky.etherscan.io",
+    "clExplorerBaseUrl": "https://holesky.beaconcha.in",
+    "generatedAt": "2026-09-22T00:00:00.000Z"
+  },
+  "contract": {
+    "validatorId": "v-queued-002",
+    "beaconIndex": null,
+    "state": "pending_assignment",
+    "exitNotified": false,
+    "dissolved": false,
+    "balanceFinalized": false,
+    "lastDistributionTime": null
+  },
+  "beacon": {
+    "validatorIndex": null,
+    "status": "pending_queued",
+    "activationEpoch": null,
+    "exitEpoch": null,
+    "withdrawableEpoch": null,
+    "withdrawalCredentials": null,
+    "finalizedEpoch": 950,
+    "withdrawn": false
+  }
+}

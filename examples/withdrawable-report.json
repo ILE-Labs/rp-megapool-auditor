@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "0.1.0",
+  "generatedAt": "2026-09-22T00:00:00.000Z",
+  "network": "holesky",
+  "megapoolAddress": "0x1111111111111111111111111111111111111111",
+  "validatorId": "v-withdrawable-004",
+  "beaconIndex": 10044,
+  "executionBlock": 2500120,
+  "finalizedEpoch": 950,
+  "urls": {
+    "megapoolUrl": "https://holesky.etherscan.io/address/0x1111111111111111111111111111111111111111",
+    "executionBlockUrl": "https://holesky.etherscan.io/block/2500120",
+    "validatorBeaconUrl": "https://holesky.beaconcha.in/validator/10044"
+  },
+  "contractValues": {
+    "validatorId": "v-withdrawable-004",
+    "beaconIndex": 10044,
+    "pubkey": null,
+    "state": "exit_in_progress",
+    "exitNotified": false,
+    "dissolved": false,
+    "dissolutionEpoch": null,
+    "balanceFinalized": false,
+    "lastDistributionTime": 1758500000
+  },
+  "beaconValues": {
+    "validatorIndex": 10044,
+    "pubkey": null,
+    "status": "withdrawal_possible",
+    "slashed": false,
+    "activationEpoch": 800,
+    "exitEpoch": 920,
+    "withdrawableEpoch": 945,
+    "withdrawalCredentials": "0x0100000000000000000000001111111111111111111111111111111111111111",
+    "finalizedEpoch": 950,
+    "withdrawn": false
+  },
+  "findings": [
+    {
+      "ruleId": "RECON-003",
+      "status": "ACTION_REQUIRED",
+      "severity": "high",
+      "explanation": "The beacon validator is withdrawable (Epoch 945 (Finalized / Elapsed at ~2023-10-02T16:48:00.000Z)), but the contract-side exit notification ('notifyValidatorExit') is not reflected.",
+      "operatorAction": "Execute Rocket Pool contract exit notification: 'rocketpool megapool notify-validator-exit --validator-id v-withdrawable-004' or notify via execution contract.",
+      "deadline": "Overdue (Withdrawable at Epoch 945, Current Finalized Epoch 950).",
+      "risk": "Megapool node operator capital remains locked in consensus withdrawal pipeline without triggering execution accounting or ETH distribution.",
+      "limitation": "The tool reports a condition to inspect; it does not submit a notification or transaction.",
+      "evidence": {
+        "contract": {
+          "validatorId": "v-withdrawable-004",
+          "beaconIndex": 10044,
+          "state": "exit_in_progress",
+          "exitNotified": false,
+          "dissolved": false,
+          "balanceFinalized": false,
+          "lastDistributionTime": 1758500000
+        },
+        "beacon": {
+          "validatorIndex": 10044,
+          "status": "withdrawal_possible",
+          "activationEpoch": 800,
+          "exitEpoch": 920,
+          "withdrawableEpoch": 945,
+          "withdrawalCredentials": "0x0100000000000000000000001111111111111111111111111111111111111111",
+          "finalizedEpoch": 950,
+          "withdrawn": false
+        }
+      }
+    }
+  ]
+}

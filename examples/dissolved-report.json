@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "0.1.0",
+  "generatedAt": "2026-09-22T00:00:00.000Z",
+  "network": "holesky",
+  "megapoolAddress": "0x1111111111111111111111111111111111111111",
+  "validatorId": "v-dissolved-006",
+  "beaconIndex": 10046,
+  "executionBlock": 2500140,
+  "finalizedEpoch": 950,
+  "urls": {
+    "megapoolUrl": "https://holesky.etherscan.io/address/0x1111111111111111111111111111111111111111",
+    "executionBlockUrl": "https://holesky.etherscan.io/block/2500140",
+    "validatorBeaconUrl": "https://holesky.beaconcha.in/validator/10046"
+  },
+  "contractValues": {
+    "validatorId": "v-dissolved-006",
+    "beaconIndex": 10046,
+    "pubkey": null,
+    "state": "dissolved",
+    "exitNotified": true,
+    "dissolved": true,
+    "dissolutionEpoch": 940,
+    "balanceFinalized": false,
+    "lastDistributionTime": 1758400000
+  },
+  "beaconValues": {
+    "validatorIndex": 10046,
+    "pubkey": null,
+    "status": "withdrawal_possible",
+    "slashed": false,
+    "activationEpoch": 800,
+    "exitEpoch": 920,
+    "withdrawableEpoch": 945,
+    "withdrawalCredentials": "0x0100000000000000000000001111111111111111111111111111111111111111",
+    "finalizedEpoch": 950,
+    "withdrawn": false
+  },
+  "findings": [
+    {
+      "ruleId": "RECON-005",
+      "status": "ACTION_REQUIRED",
+      "severity": "high",
+      "explanation": "The validator is marked dissolved on the megapool contract (dissolution epoch: 940). Final balance resolution or proof submission is pending.",
+      "operatorAction": "Inspect megapool contract dissolution logs and execute final dissolution settlement / distribution steps.",
+      "deadline": "Dissolution proof / penalty submission window.",
+      "risk": "Unresolved dissolved state prevents megapool vault collateral rebalancing or operator stake reclamation.",
+      "limitation": "No transaction is constructed or broadcast by this tool.",
+      "evidence": {
+        "contract": {
+          "validatorId": "v-dissolved-006",
+          "beaconIndex": 10046,
+          "state": "dissolved",
+          "exitNotified": true,
+          "dissolved": true,
+          "dissolutionEpoch": 940,
+          "balanceFinalized": false,
+          "lastDistributionTime": 1758400000
+        },
+        "beacon": {
+          "validatorIndex": 10046,
+          "status": "withdrawal_possible",
+          "activationEpoch": 800,
+          "exitEpoch": 920,
+          "withdrawableEpoch": 945,
+          "withdrawalCredentials": "0x0100000000000000000000001111111111111111111111111111111111111111",
+          "finalizedEpoch": 950,
+          "withdrawn": false
+        }
+      }
+    }
+  ]
+}

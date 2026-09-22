@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "network": "holesky",
+    "megapoolAddress": "0x1111111111111111111111111111111111111111",
+    "validatorId": "v-unavailable-007",
+    "executionBlock": 2500150,
+    "protocolVersion": "saturn-1",
+    "explorerBaseUrl": "https://holesky.etherscan.io",
+    "clExplorerBaseUrl": "https://holesky.beaconcha.in",
+    "generatedAt": "2026-09-22T00:00:00.000Z"
+  },
+  "contract": {
+    "validatorId": "v-unavailable-007",
+    "beaconIndex": 10047,
+    "state": "active",
+    "exitNotified": false,
+    "dissolved": false,
+    "balanceFinalized": false,
+    "lastDistributionTime": 1758500000
+  },
+  "beacon": null
+}

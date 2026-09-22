@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.*
+!.env.example
+coverage/
+*.log
+.DS_Store
+
+# Local RPC captures and operator-specific output
+captures/local-*/
+reports/

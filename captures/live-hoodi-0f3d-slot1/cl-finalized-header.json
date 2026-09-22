@@ -1,0 +1,8 @@
+{
+  "url": "https://ethereum-hoodi-beacon-api.publicnode.com/eth/v1/beacon/headers/finalized",
+  "timestamp": "2026-09-22T03:37:20.232Z",
+  "elapsedMs": 252,
+  "status": 200,
+  "body": "{\"execution_optimistic\":false,\"finalized\":true,\"data\":{\"root\":\"0xae426d96534fe6477dd9c18596569324da34af32a700e39bbdccd4a5df484e95\",\"canonical\":true,\"header\":{\"message\":{\"slot\":\"3986144\",\"proposer_index\":\"1400049\",\"parent_root\":\"0x62146b9c756b38fdbc267fae92d15d172edb8c9516bbe250e79811b266008efa\",\"state_root\":\"0xaeb5b47539eb38ebdac6eb1e64fa42b8ee0f3b269b5e59c273971b0766927feb\",\"body_root\":\"0xd6ea9dfe73508415837e507b5b8e78ebeb90670590ac1de0774e1c51a2b6eba8\"},\"signature\":\"0xa52a23897d4d18ec5b4aa26f269416b59b28abd6b786f2dc5a79b91c0c483ab1fa6693d295eca179e13145d35b76ab3a075361d3236209cef5b99e304ee6cf7f56217b3db9b5ec335e96c9d27d99a8a6fefeef6492496e7171d08e4e6b07e824\"}}}",
+  "error": null
+}

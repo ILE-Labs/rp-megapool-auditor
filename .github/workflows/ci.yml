@@ -1,0 +1,18 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - run: npm run lint
+      - run: node src/cli.mjs --fixture fixtures/healthy.json --format json
+      - run: node src/cli.mjs --fixture fixtures/withdrawable.json --format markdown
+      - run: node src/cli.mjs --fixture fixtures/inconclusive.json --format terminal

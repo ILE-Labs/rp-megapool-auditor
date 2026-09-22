@@ -1,0 +1,8 @@
+{
+  "url": "https://ethereum-hoodi-beacon-api.publicnode.com/eth/v1/beacon/states/finalized/validators/0x82bd6e6bbdc8c4d7f6f43a630652ec53b60ea83043ee88a397408a34214dc8df2987aa023b108c1ff9c582c7473da440",
+  "timestamp": "2026-09-22T03:37:08.040Z",
+  "elapsedMs": 435,
+  "status": 200,
+  "body": "{\"execution_optimistic\":false,\"finalized\":true,\"data\":{\"index\":\"1269872\",\"balance\":\"0\",\"status\":\"withdrawal_done\",\"validator\":{\"pubkey\":\"0x82bd6e6bbdc8c4d7f6f43a630652ec53b60ea83043ee88a397408a34214dc8df2987aa023b108c1ff9c582c7473da440\",\"withdrawal_credentials\":\"0x0100000000000000000000000f3db18b8e7c152b50f96e0f4c0ee72188656a3b\",\"effective_balance\":\"0\",\"slashed\":false,\"activation_eligibility_epoch\":\"72886\",\"activation_epoch\":\"72892\",\"exit_epoch\":\"84617\",\"withdrawable_epoch\":\"84873\"}}}",
+  "error": null
+}

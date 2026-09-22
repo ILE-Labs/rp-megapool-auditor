@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "network": "holesky",
+    "megapoolAddress": "0x1111111111111111111111111111111111111111",
+    "validatorId": "v-dissolved-006",
+    "executionBlock": 2500140,
+    "protocolVersion": "saturn-1",
+    "explorerBaseUrl": "https://holesky.etherscan.io",
+    "clExplorerBaseUrl": "https://holesky.beaconcha.in",
+    "generatedAt": "2026-09-22T00:00:00.000Z"
+  },
+  "contract": {
+    "validatorId": "v-dissolved-006",
+    "beaconIndex": 10046,
+    "state": "dissolved",
+    "exitNotified": true,
+    "dissolved": true,
+    "dissolutionEpoch": 940,
+    "balanceFinalized": false,
+    "lastDistributionTime": 1758400000
+  },
+  "beacon": {
+    "validatorIndex": 10046,
+    "status": "withdrawal_possible",
+    "activationEpoch": 800,
+    "exitEpoch": 920,
+    "withdrawableEpoch": 945,
+    "withdrawalCredentials": "0x0100000000000000000000001111111111111111111111111111111111111111",
+    "finalizedEpoch": 950,
+    "withdrawn": false
+  }
+}
