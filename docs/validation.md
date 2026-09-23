@@ -9,6 +9,8 @@
 - Produces healthy, review-required, and inconclusive outcomes.
 - Replays captured evidence without network access.
 - Runs through automated tests and CI.
+- Validates live execution-chain identity, bytecode presence, and requested protocol ruleset before using live data.
+- Supports a live `--all` scan over every validator slot returned by `getValidatorCount()`.
 
 ## Live observations
 
@@ -42,3 +44,34 @@ node src/cli.mjs --fixture fixtures/inconclusive.json --format terminal
 
 The fixture commands exercise the rules engine. The `captures/` directory
 contains the corresponding evidence artifacts and generated reports.
+
+## Live deployment and batch checks
+
+For live use, provide the expected chain ID and protocol version explicitly:
+
+```bash
+node src/cli.mjs \
+  --all \
+  --megapool 0x... \
+  --el-rpc https://... \
+  --cl-rpc https://... \
+  --network hoodi \
+  --chain-id 560048 \
+  --protocol-version saturn-1 \
+  --format json
+```
+
+The tool checks address format, `eth_chainId`, and non-empty bytecode. These
+checks prove that code exists at the supplied address on the queried chain;
+they do not by themselves prove that the address is the intended official
+Rocket Pool deployment. The current Saturn ABI also omits some accounting
+flags, so the auditor retains `INCONCLUSIVE` results where execution state
+cannot be proven.
+
+See [operator validation](operator-validation.md) and [lifecycle evidence](lifecycle-evidence.md)
+for the external confirmation and real-capture gates that remain open.
+
+For raw evidence capture across a pool, use `npm run capture:batch -- ...`.
+The command captures slots sequentially into replayable subdirectories and
+writes `batch-manifest.json`; sequential operation is deliberate because
+public RPC endpoints often rate-limit a full-pool fan-out.

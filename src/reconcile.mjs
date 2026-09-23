@@ -92,6 +92,21 @@ export function reconcileValidator(input) {
   const findings = [];
   const SUPPORTED_VERSIONS = new Set(['saturn-1']);
 
+  if (metadata.deployment && !metadata.deployment.valid) {
+    findings.push(finding({
+      ruleId: 'DEPLOYMENT-001',
+      status: 'INCONCLUSIVE',
+      severity: 'high',
+      explanation: 'The supplied Megapool address could not be verified as deployed on the queried execution chain, or the observed chain ID did not match the requested chain ID.',
+      operatorAction: 'Verify the network, Megapool address, execution RPC, and expected chain ID before relying on the audit.',
+      deadline: 'Before taking any operator action from this report.',
+      risk: 'Auditing the wrong address or chain can produce an apparently valid but irrelevant result.',
+      limitation: 'Bytecode presence proves deployment only; it does not prove that the address is the intended Rocket Pool Saturn 1 Megapool.',
+      evidence: { deployment: metadata.deployment }
+    }));
+    return { schemaVersion: '0.1.0', generatedAt: metadata.generatedAt ?? new Date().toISOString(), ...base, findings };
+  }
+
   // 1. Version Check
   if (!metadata.protocolVersion || !SUPPORTED_VERSIONS.has(metadata.protocolVersion)) {
     findings.push(finding({

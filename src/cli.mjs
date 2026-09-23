@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { reconcile, toMarkdown, toTerminal } from './reconcile.mjs';
-import { fetchCrossLayerSnapshot } from './adapters.mjs';
+import { fetchCrossLayerSnapshot, fetchMegapoolValidatorCount } from './adapters.mjs';
 
 function printHelp() {
   console.log(`
@@ -21,7 +21,9 @@ OPTIONS:
   --el-rpc, --execution-rpc <url>  Execution-layer JSON-RPC endpoint URL
   --cl-rpc, --beacon-rpc <url>  Consensus-layer Beacon REST endpoint URL
   --validator-id <id>           Validator ID or pubkey/index filter
+  --all                         Audit every validator slot returned by the Megapool
   --block <number|tag>          Execution block tag or number (default: latest)
+  --chain-id <number>           Expected execution chain ID (recommended for live audits)
   --network <name>              Ethereum network name (default: holesky)
   --protocol-version <version>  Protocol version pin (default: saturn-1)
   --explorer-base-url <url>     Base URL for execution explorer links
@@ -54,7 +56,9 @@ async function main() {
   const clRpc = get('cl-rpc', get('beacon-rpc', null));
   const megapoolAddress = get('megapool', null);
   const validatorId = get('validator-id', null);
+  const all = args.includes('--all');
   const blockTag = get('block', 'latest');
+  const expectedChainId = get('chain-id', null);
   const network = get('network', 'holesky');
   const protocolVersion = get('protocol-version', 'saturn-1');
   const explorerBaseUrl = get('explorer-base-url', null);
@@ -65,17 +69,28 @@ async function main() {
 
   if (elRpc && clRpc && megapoolAddress) {
     try {
-      input = await fetchCrossLayerSnapshot({
-        megapoolAddress,
-        elRpcUrl: elRpc,
-        clRpcUrl: clRpc,
-        validatorId,
-        blockTag,
-        network,
-        protocolVersion,
-        explorerBaseUrl,
-        clExplorerBaseUrl
-      });
+      if (all) {
+        const count = await fetchMegapoolValidatorCount({ rpcUrl: elRpc, megapoolAddress, blockTag });
+        if (!Number.isInteger(count) || count < 1) throw new Error('Megapool returned no validator slots');
+        const validators = await Promise.all(Array.from({ length: count }, (_, slot) =>
+          fetchCrossLayerSnapshot({
+            megapoolAddress, elRpcUrl: elRpc, clRpcUrl: clRpc, validatorId: String(slot), blockTag,
+            network, protocolVersion, expectedChainId, explorerBaseUrl, clExplorerBaseUrl
+          })
+        ));
+        input = {
+          metadata: { network, megapoolAddress, executionBlock: validators[0]?.metadata.executionBlock ?? null,
+            finalizedEpoch: validators[0]?.metadata.finalizedEpoch ?? null, protocolVersion,
+            expectedChainId: expectedChainId === null ? null : Number(expectedChainId),
+            deployment: validators[0]?.metadata.deployment ?? null, explorerBaseUrl, clExplorerBaseUrl },
+          validators: validators.map(snapshot => ({ contract: snapshot.contract, beacon: snapshot.beacon }))
+        };
+      } else {
+        input = await fetchCrossLayerSnapshot({
+          megapoolAddress, elRpcUrl: elRpc, clRpcUrl: clRpc, validatorId, blockTag, network,
+          protocolVersion, expectedChainId, explorerBaseUrl, clExplorerBaseUrl
+        });
+      }
     } catch (err) {
       console.error(`Error connecting to RPC endpoints: ${err.message}`);
       process.exit(1);

@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { encodeGetValidatorCount, encodeGetValidatorDetails, decodeValidatorInfoAndPubkey } from './megapool.mjs';
 import { decodeUint256, splitWords, decodeBool } from './evm.mjs';
-import { fetchBeaconFinalizedEpoch } from './adapters.mjs';
+import { fetchBeaconFinalizedEpoch, verifyMegapoolDeployment } from './adapters.mjs';
 
 function printHelp() {
   console.log(`
@@ -41,6 +41,8 @@ OPTIONS:
   --network <name>       Network name (holesky | mainnet | hoodi)
   --val-index <n>        Validator slot index inside Megapool (default: 0)
   --block <tag>          EL block tag (default: latest)
+  --chain-id <number>    Expected EL chain ID (recommended for live captures)
+  --protocol-version <v> Protocol ruleset pin (default: saturn-1)
   --out <dir>            Output directory for capture bundle (default: capture/)
   --help                 Show this help
 
@@ -97,15 +99,15 @@ function decodeValidatorSlot(hexData) {
 
 function normalizeBeaconStatus(rawStatus, withdrawableEpoch, finalizedEpoch) {
   if (!rawStatus) return 'unknown';
-  if (rawStatus.includes('active') && !rawStatus.includes('exit')) return 'active_ongoing';
+  if (rawStatus.includes('withdrawn')) return 'withdrawal_done';
   if (rawStatus.includes('pending')) return rawStatus;
-  if (rawStatus.includes('exit') || rawStatus.includes('slashed_exit')) {
+  if (rawStatus.includes('exit')) {
     if (withdrawableEpoch !== null && finalizedEpoch !== null && finalizedEpoch >= withdrawableEpoch) {
       return 'withdrawal_possible';
     }
     return 'exiting';
   }
-  if (rawStatus.includes('withdrawn')) return 'withdrawal_done';
+  if (rawStatus.includes('active')) return 'active_ongoing';
   return rawStatus;
 }
 
@@ -120,6 +122,9 @@ async function run() {
   const network = get('network', 'holesky');
   const valSlot = parseInt(get('val-index', '0'), 10);
   const blockTag = get('block', 'latest');
+  const expectedChainIdRaw = get('chain-id', null);
+  const expectedChainId = expectedChainIdRaw === null ? null : Number(expectedChainIdRaw);
+  const protocolVersion = get('protocol-version', 'saturn-1');
   const outDir = get('out', 'capture');
 
   if (!megapoolAddress || !elRpc || !clRpc) {
@@ -137,8 +142,20 @@ async function run() {
   console.log(`[capture] EL RPC:   ${elRpc}`);
   console.log(`[capture] CL RPC:   ${clRpc.replace(/\/+$/, '')}`);
   console.log(`[capture] Val slot: ${valSlot}`);
+  console.log(`[capture] Expected chain: ${expectedChainId ?? 'not pinned'}`);
   console.log(`[capture] Output:   ${outDir}/`);
   console.log('');
+
+  // ── Deployment identity checks ─────────────────────────────────────────
+  console.log('[capture] EL: verifying address, chain ID, and bytecode ...');
+  const deployment = await verifyMegapoolDeployment({
+    rpcUrl: elRpc,
+    megapoolAddress,
+    blockTag,
+    expectedChainId
+  });
+  writeCapture(outDir, 'el-deployment-verification.json', deployment);
+  console.log(`         → chain ${deployment.chainId ?? 'FAILED'}, code=${deployment.codePresent ? 'present' : 'absent'}, valid=${deployment.valid}`);
 
   // ── EL: eth_blockNumber ──────────────────────────────────────────────────
   console.log('[capture] EL: eth_blockNumber ...');
@@ -252,12 +269,14 @@ async function run() {
       megapoolAddress,
       validatorSlot: valSlot,
       executionBlock,
-      protocolVersion: 'saturn-1',
+      protocolVersion,
       capturedAt: captureStart,
       generatedAt: captureStart,
       elRpcUrl: elRpc,
       clRpcUrl: clBase,
-      elBlockTag: blockTag
+      elBlockTag: blockTag,
+      expectedChainId,
+      deployment
     },
     contract: contractState
       ? { ...contractState, validatorId: `slot-${valSlot}` }
@@ -296,6 +315,9 @@ async function run() {
     elRpcUrl: elRpc,
     clRpcUrl: clBase,
     elBlockTag: blockTag,
+    expectedChainId,
+    protocolVersion,
+    deployment,
     executionBlock,
     finalizedEpoch,
     overallStatus: report.findings[0]?.status ?? 'UNKNOWN',
@@ -307,6 +329,7 @@ async function run() {
       `el-validator-${valSlot}.json`,
       'cl-finalized-header.json',
       `cl-validator-${beaconTarget}.json`,
+      'el-deployment-verification.json',
       'snapshot.json',
       'report.json',
       'report.md',

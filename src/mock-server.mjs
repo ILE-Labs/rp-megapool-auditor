@@ -2,7 +2,8 @@ import http from 'node:http';
 import { encodeUint256, encodeBool, padUint256 } from './evm.mjs';
 
 /**
- * Creates a lightweight mock server handling EVM JSON-RPC (eth_blockNumber, eth_call)
+ * Creates a lightweight mock server handling EVM JSON-RPC (eth_chainId,
+ * eth_getCode, eth_blockNumber, eth_call)
  * and Consensus Layer Beacon REST endpoints with real EVM byte serialization.
  */
 export function createMockRpcServer(routes = {}) {
@@ -18,6 +19,18 @@ export function createMockRpcServer(routes = {}) {
       try {
         const json = JSON.parse(body);
 
+        if (json.method === 'eth_chainId') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ jsonrpc: '2.0', id: json.id, result: routes.chainIdHex ?? '0x1' }));
+          return;
+        }
+
+        if (json.method === 'eth_getCode') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ jsonrpc: '2.0', id: json.id, result: routes.deployedCode ?? '0x6001600155' }));
+          return;
+        }
+
         if (json.method === 'eth_blockNumber') {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({
@@ -29,6 +42,12 @@ export function createMockRpcServer(routes = {}) {
         }
 
         if (json.method === 'eth_call') {
+          const calldata = json.params?.[0]?.data ?? '';
+          if (calldata.startsWith('0x7071688a')) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ jsonrpc: '2.0', id: json.id, result: padUint256(routes.validatorCount ?? 1) }));
+            return;
+          }
           // Serialize Megapool tuple:
           // (beaconIndex, stateCode, exitNotified, balanceFinalized, dissolved, dissolutionEpoch, lastDistributionTime)
           const state = routes.megapoolValidatorState ?? {

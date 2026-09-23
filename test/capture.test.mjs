@@ -53,6 +53,7 @@ test('capture.mjs: writes a complete capture bundle with correct file set', asyn
       '--el-rpc', baseUrl,
       '--cl-rpc', baseUrl,
       '--network', 'holesky',
+      '--chain-id', '1',
       '--out', outDir
     ]);
 
@@ -62,6 +63,7 @@ test('capture.mjs: writes a complete capture bundle with correct file set', asyn
       'el-block-number.json',
       'el-validator-count.json',
       'el-validator-0.json',
+      'el-deployment-verification.json',
       'cl-finalized-header.json',
       'cl-validator-10044.json',
       'snapshot.json',
@@ -82,6 +84,10 @@ test('capture.mjs: writes a complete capture bundle with correct file set', asyn
     assert.equal(meta.finalizedEpoch, 950);
     assert.equal(meta.overallStatus, 'ACTION_REQUIRED');
     assert.equal(meta.ruleId, 'RECON-003');
+    assert.equal(meta.expectedChainId, 1);
+    assert.equal(meta.deployment.chainId, 1);
+    assert.equal(meta.deployment.codePresent, true);
+    assert.equal(meta.deployment.valid, true);
 
     // Verify the report JSON
     const report = JSON.parse(fs.readFileSync(path.join(outDir, 'report.json'), 'utf8'));
@@ -101,10 +107,56 @@ test('capture.mjs: writes a complete capture bundle with correct file set', asyn
     // Verify the snapshot is self-contained
     const snapshot = JSON.parse(fs.readFileSync(path.join(outDir, 'snapshot.json'), 'utf8'));
     assert.equal(snapshot.metadata.executionBlock, 2500000);
+    assert.equal(snapshot.metadata.deployment.valid, true);
     assert.equal(snapshot.contract.state, 'exit_in_progress');
     assert.equal(snapshot.beacon.status, 'withdrawal_possible');
     assert.equal(snapshot.beacon.withdrawableEpoch, 945);
 
+  } finally {
+    await mock.close();
+    fs.rmSync(outDir, { recursive: true, force: true });
+  }
+});
+
+test('CLI --all audits every live validator slot and verifies deployment metadata', async () => {
+  const mock = createMockRpcServer({
+    validatorCount: 2,
+    chainIdHex: '0x539',
+    megapoolValidatorState: {
+      beaconIndex: 10044,
+      stateCode: 2,
+      exitNotified: false,
+      balanceFinalized: false,
+      dissolved: false,
+      dissolutionEpoch: 0,
+      lastDistributionTime: 1758500000
+    },
+    finalizedSlot: '30400',
+    beaconValidator: {
+      index: '10044',
+      status: 'active_ongoing',
+      validator: {
+        pubkey: '0x888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888',
+        withdrawal_credentials: '0x0100000000000000000000001111111111111111111111111111111111111111',
+        activation_epoch: '800',
+        exit_epoch: '18446744073709551615',
+        withdrawable_epoch: '18446744073709551615'
+      }
+    }
+  });
+  const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rp-batch-test-'));
+
+  try {
+    const baseUrl = await mock.listen();
+    const { stdout } = await execFileAsync(process.execPath, [
+      'src/cli.mjs', '--all', '--megapool', '0x1111111111111111111111111111111111111111',
+      '--el-rpc', baseUrl, '--cl-rpc', baseUrl, '--network', 'hoodi', '--chain-id', '1337', '--format', 'json'
+    ]);
+    const report = JSON.parse(stdout);
+    assert.equal(report.validatorCount, 2);
+    assert.equal(report.validators.length, 2);
+    assert.equal(report.metadata, undefined);
+    assert.equal(report.overallStatus, 'HEALTHY');
   } finally {
     await mock.close();
     fs.rmSync(outDir, { recursive: true, force: true });

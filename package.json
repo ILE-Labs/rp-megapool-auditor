@@ -6,8 +6,9 @@
   "description": "Read-only evidence-backed reconciliation of Rocket Pool validator state across execution and beacon layers.",
   "scripts": {
     "test": "node --test",
-    "lint": "node --check src/cli.mjs && node --check src/reconcile.mjs && node --check src/adapters.mjs && node --check src/mock-server.mjs && node --check src/evm.mjs && node --check src/beacon.mjs && node --check src/megapool.mjs && node --check src/capture.mjs && node --check src/compare.mjs && node --check src/replay.mjs",
+    "lint": "node --check src/cli.mjs && node --check src/reconcile.mjs && node --check src/adapters.mjs && node --check src/mock-server.mjs && node --check src/evm.mjs && node --check src/beacon.mjs && node --check src/megapool.mjs && node --check src/capture.mjs && node --check src/batch-capture.mjs && node --check src/compare.mjs && node --check src/replay.mjs",
     "capture": "node src/capture.mjs",
+    "capture:batch": "node src/batch-capture.mjs",
     "replay": "node src/replay.mjs",
     "compare": "node src/compare.mjs"
   },

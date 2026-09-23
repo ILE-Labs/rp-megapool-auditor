@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { reconcile, toMarkdown, toTerminal } from '../src/reconcile.mjs';
 import { createMockRpcServer } from '../src/mock-server.mjs';
-import { fetchCrossLayerSnapshot } from '../src/adapters.mjs';
+import { fetchCrossLayerSnapshot, normalizeBeaconStatus } from '../src/adapters.mjs';
 import { encodeGetValidatorDetails, decodeValidatorDetails, MEGAPOOL_SIGNATURES } from '../src/megapool.mjs';
 import { verifyWithdrawalCredentials, formatEpochProjection, extractWithdrawalAddress } from '../src/beacon.mjs';
 import { encodeFunctionCall, splitWords, padUint256, decodeUint256 } from '../src/evm.mjs';
@@ -53,6 +53,12 @@ test('Beacon Math: formatEpochProjection calculates elapsed and remaining durati
 
   const upcoming = formatEpochProjection(1000, 950, 'holesky');
   assert.ok(upcoming.includes('remaining'));
+});
+
+test('Beacon status normalization does not hide active-exiting validators', () => {
+  assert.equal(normalizeBeaconStatus('active_exiting_ongoing', 120, 100), 'exiting');
+  assert.equal(normalizeBeaconStatus('active_exiting_ongoing', 120, 120), 'withdrawal_possible');
+  assert.equal(normalizeBeaconStatus('active_ongoing', null, 100), 'active_ongoing');
 });
 
 test('Rule RECON-000: healthy fixture yields HEALTHY with complete evidence', () => {

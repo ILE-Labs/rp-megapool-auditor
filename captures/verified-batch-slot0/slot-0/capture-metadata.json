@@ -1,0 +1,39 @@
+{
+  "capturedAt": "2026-09-23T11:38:52.448Z",
+  "completedAt": "2026-09-23T11:38:55.233Z",
+  "network": "hoodi",
+  "megapoolAddress": "0x66d8fbed949d3fce4caa3183fea4c953fd727e75",
+  "validatorSlot": 0,
+  "beaconIndexQueried": "0x8913b02528d4110121ad27d0a5b6f90ba0027da81d910aa3d5f93dabcde57d7b62a8c197bfa64c7a3c539671006b48e4",
+  "elRpcUrl": "https://rpc.hoodi.ethpandaops.io",
+  "clRpcUrl": "https://ethereum-hoodi-beacon-api.publicnode.com",
+  "elBlockTag": "latest",
+  "expectedChainId": 560048,
+  "protocolVersion": "saturn-1",
+  "deployment": {
+    "addressValid": true,
+    "chainId": 560048,
+    "expectedChainId": 560048,
+    "codePresent": true,
+    "chainMatches": true,
+    "valid": true,
+    "error": null
+  },
+  "executionBlock": 3680327,
+  "finalizedEpoch": 124868,
+  "overallStatus": "HEALTHY",
+  "ruleId": "RECON-000",
+  "files": [
+    "capture-metadata.json",
+    "el-block-number.json",
+    "el-validator-count.json",
+    "el-validator-0.json",
+    "cl-finalized-header.json",
+    "cl-validator-0x8913b02528d4110121ad27d0a5b6f90ba0027da81d910aa3d5f93dabcde57d7b62a8c197bfa64c7a3c539671006b48e4.json",
+    "el-deployment-verification.json",
+    "snapshot.json",
+    "report.json",
+    "report.md",
+    "report.terminal.txt"
+  ]
+}

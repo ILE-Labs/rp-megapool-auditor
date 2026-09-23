@@ -45,6 +45,43 @@ export async function ethCall({ rpcUrl, to, data, blockTag = 'latest' }) {
   return json.result;
 }
 
+export function isEvmAddress(value) {
+  return typeof value === 'string' && /^0x[0-9a-fA-F]{40}$/.test(value);
+}
+
+export async function verifyMegapoolDeployment({ rpcUrl, megapoolAddress, blockTag = 'latest', expectedChainId = null }) {
+  const addressValid = isEvmAddress(megapoolAddress);
+  if (!addressValid) {
+    return { addressValid: false, chainId: null, expectedChainId, codePresent: false, valid: false, error: 'invalid EVM address' };
+  }
+
+  try {
+    const [chainResponse, codeResponse] = await Promise.all([
+      fetch(rpcUrl, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 10, method: 'eth_chainId', params: [] })
+      }),
+      fetch(rpcUrl, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 11, method: 'eth_getCode', params: [megapoolAddress, blockTag] })
+      })
+    ]);
+    if (!chainResponse.ok || !codeResponse.ok) throw new Error('execution RPC rejected deployment checks');
+    const chainJson = await chainResponse.json();
+    const codeJson = await codeResponse.json();
+    const chainId = chainJson.result ? Number.parseInt(chainJson.result, 16) : null;
+    const codePresent = typeof codeJson.result === 'string' && codeJson.result !== '0x' && !/^0x0+$/i.test(codeJson.result);
+    const chainMatches = expectedChainId === null || expectedChainId === undefined || chainId === Number(expectedChainId);
+    return {
+      addressValid, chainId, expectedChainId: expectedChainId === null ? null : Number(expectedChainId),
+      codePresent, chainMatches, valid: addressValid && codePresent && chainMatches,
+      error: null
+    };
+  } catch (error) {
+    return { addressValid, chainId: null, expectedChainId, codePresent: false, valid: false, error: error.message };
+  }
+}
+
 export async function fetchMegapoolValidatorCount({ rpcUrl, megapoolAddress, blockTag = 'latest' }) {
   try {
     const data = encodeGetValidatorCount();
@@ -135,6 +172,18 @@ export async function fetchBeaconFinalizedEpoch(beaconUrl) {
   return null;
 }
 
+export function normalizeBeaconStatus(rawStatus, withdrawableEpoch, finalizedEpoch) {
+  if (!rawStatus) return 'unknown';
+  if (rawStatus.includes('withdrawn')) return 'withdrawal_done';
+  if (rawStatus.includes('exit')) {
+    return (withdrawableEpoch !== null && finalizedEpoch !== null && finalizedEpoch >= withdrawableEpoch)
+      ? 'withdrawal_possible'
+      : 'exiting';
+  }
+  if (rawStatus.includes('active')) return 'active_ongoing';
+  return rawStatus;
+}
+
 export async function fetchBeaconState({
   beaconUrl,
   validatorIndexOrPubkey
@@ -188,16 +237,7 @@ export async function fetchBeaconState({
       ? parseInt(validator.withdrawable_epoch, 10)
       : null;
 
-    let normalizedStatus = rawStatus;
-    if (rawStatus.includes('active')) {
-      normalizedStatus = 'active_ongoing';
-    } else if (rawStatus.includes('exit') && !rawStatus.includes('withdrawn')) {
-      normalizedStatus = (withdrawableEpoch !== null && finalizedEpoch !== null && finalizedEpoch >= withdrawableEpoch)
-        ? 'withdrawal_possible'
-        : 'exiting';
-    } else if (rawStatus.includes('withdrawn')) {
-      normalizedStatus = 'withdrawal_done';
-    }
+    const normalizedStatus = normalizeBeaconStatus(rawStatus, withdrawableEpoch, finalizedEpoch);
 
     return {
       validatorIndex: valData.index ? parseInt(valData.index, 10) : Number(validatorIndexOrPubkey),
@@ -226,7 +266,14 @@ export async function fetchCrossLayerSnapshot({
   protocolVersion = 'saturn-1',
   explorerBaseUrl,
   clExplorerBaseUrl
+  ,expectedChainId = null
 }) {
+  const deployment = await verifyMegapoolDeployment({
+    rpcUrl: elRpcUrl,
+    megapoolAddress,
+    blockTag,
+    expectedChainId
+  });
   const elData = await fetchExecutionState({
     rpcUrl: elRpcUrl,
     megapoolAddress,
@@ -247,6 +294,7 @@ export async function fetchCrossLayerSnapshot({
       validatorId: elData.contractState.validatorId || validatorId,
       executionBlock: elData.executionBlock,
       protocolVersion,
+      deployment,
       explorerBaseUrl,
       clExplorerBaseUrl,
       generatedAt: new Date().toISOString()
