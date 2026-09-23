@@ -1,9 +1,0 @@
-{
-  "url": "https://ethereum-hoodi-rpc.publicnode.com",
-  "timestamp": "2026-09-22T03:37:07.311Z",
-  "elapsedMs": 264,
-  "status": 200,
-  "body": "{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000807\"}\n",
-  "error": null,
-  "calldata": "0x7071688a"
-}

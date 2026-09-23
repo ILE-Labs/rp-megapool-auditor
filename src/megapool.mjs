@@ -15,6 +15,16 @@ export const MEGAPOOL_SIGNATURES = {
   getTotalEffectiveBalance: 'getTotalEffectiveBalance()'
 };
 
+export const ROCKET_POOL_REGISTRY_KEYS = {
+  rocketNodeManager: '0xaf00be55c9fb8f543c04e0aa0d70351b880c1bfafffd15b60065a4a50c85ec94',
+  rocketMegapoolFactory: '0x0daa0d715a7b4f4224221c135ef0a61050b0d8b23f030d7c9bb8128781b94eb0'
+};
+
+export const ROCKET_STORAGE_BY_NETWORK = {
+  mainnet: '0x1d8f8f00cfa6758d7be78336684788fb0ee0fa46',
+  hoodi: '0x594fb75d3dc2dfa0150ad03f99f97817747dd4e1'
+};
+
 // These selectors are taken from the current RocketMegapoolDelegate ABI.
 // Do not derive them with NIST SHA-3: Ethereum uses Keccak-256.
 export const MEGAPOOL_SELECTORS = {
@@ -22,6 +32,14 @@ export const MEGAPOOL_SELECTORS = {
   getValidatorInfo: '0x81c1381b',
   getValidatorInfoAndPubkey: '0xa73f23b6',
   getValidatorPubkey: '0x0e335206'
+};
+
+export const ROCKET_POOL_SELECTORS = {
+  rocketStorageGetAddress: '0x21f8a721',
+  megapoolGetNodeAddress: '0x70dabc9e',
+  nodeManagerGetMegapoolAddress: '0x7defe942',
+  megapoolFactoryGetExpectedAddress: '0x74db6b88',
+  megapoolFactoryGetMegapoolDeployed: '0x4e1ccaf1'
 };
 
 export const VALIDATOR_STATES = {

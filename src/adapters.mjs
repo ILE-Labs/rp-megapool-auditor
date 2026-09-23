@@ -1,4 +1,11 @@
-import { encodeGetValidatorInfoAndPubkey, decodeValidatorInfoAndPubkey, encodeGetValidatorCount } from './megapool.mjs';
+import {
+  encodeGetValidatorInfoAndPubkey,
+  decodeValidatorInfoAndPubkey,
+  encodeGetValidatorCount,
+  ROCKET_POOL_REGISTRY_KEYS,
+  ROCKET_POOL_SELECTORS,
+  ROCKET_STORAGE_BY_NETWORK
+} from './megapool.mjs';
 import { decodeUint256 } from './evm.mjs';
 
 /**
@@ -79,6 +86,86 @@ export async function verifyMegapoolDeployment({ rpcUrl, megapoolAddress, blockT
     };
   } catch (error) {
     return { addressValid, chainId: null, expectedChainId, codePresent: false, valid: false, error: error.message };
+  }
+}
+
+function encodeAddressArgument(address) {
+  return address.toLowerCase().replace(/^0x/, '').padStart(64, '0');
+}
+
+function decodeAddressResult(result) {
+  if (typeof result !== 'string' || result.length < 42 || /^0x0*$/i.test(result)) return null;
+  return `0x${result.slice(-40).toLowerCase()}`;
+}
+
+function decodeBoolResult(result) {
+  return typeof result === 'string' && BigInt(result) !== 0n;
+}
+
+/**
+ * Prove that the address is the canonical Rocket Pool Megapool for its node.
+ * This follows the live RocketStorage -> Factory/NodeManager registry and
+ * compares both canonical address paths, rather than trusting bytecode alone.
+ */
+export async function verifyMegapoolProvenance({
+  rpcUrl,
+  megapoolAddress,
+  network = 'holesky',
+  blockTag = 'latest',
+  rocketStorageAddress = null
+}) {
+  const storage = (rocketStorageAddress || ROCKET_STORAGE_BY_NETWORK[network] || '').toLowerCase();
+  const base = {
+    checked: false, valid: false, network,
+    rocketStorageAddress: storage || null,
+    nodeManagerAddress: null, factoryAddress: null, nodeAddress: null,
+    expectedMegapoolAddress: null, mappedMegapoolAddress: null,
+    factoryDeploymentFlag: null, checks: {}, error: null
+  };
+  if (!storage) return { ...base, error: 'no canonical RocketStorage address configured for network' };
+  if (!isEvmAddress(megapoolAddress) || !isEvmAddress(storage)) {
+    return { ...base, error: 'invalid Megapool or RocketStorage address' };
+  }
+  try {
+    const storageCall = (key) => ethCall({
+      rpcUrl,
+      to: storage,
+      data: ROCKET_POOL_SELECTORS.rocketStorageGetAddress + key.replace(/^0x/, ''),
+      blockTag
+    });
+    const [nodeManagerRaw, factoryRaw, nodeRaw] = await Promise.all([
+      storageCall(ROCKET_POOL_REGISTRY_KEYS.rocketNodeManager),
+      storageCall(ROCKET_POOL_REGISTRY_KEYS.rocketMegapoolFactory),
+      ethCall({ rpcUrl, to: megapoolAddress, data: ROCKET_POOL_SELECTORS.megapoolGetNodeAddress, blockTag })
+    ]);
+    const nodeManagerAddress = decodeAddressResult(nodeManagerRaw);
+    const factoryAddress = decodeAddressResult(factoryRaw);
+    const nodeAddress = decodeAddressResult(nodeRaw);
+    if (!nodeManagerAddress || !factoryAddress || !nodeAddress) {
+      return { ...base, checked: true, nodeManagerAddress, factoryAddress, nodeAddress,
+        error: 'Rocket Pool registry or Megapool node getter returned no address' };
+    }
+    const arg = encodeAddressArgument(nodeAddress);
+    const [expectedRaw, mappedRaw, deployedRaw] = await Promise.all([
+      ethCall({ rpcUrl, to: factoryAddress, data: ROCKET_POOL_SELECTORS.megapoolFactoryGetExpectedAddress + arg, blockTag }),
+      ethCall({ rpcUrl, to: nodeManagerAddress, data: ROCKET_POOL_SELECTORS.nodeManagerGetMegapoolAddress + arg, blockTag }),
+      ethCall({ rpcUrl, to: factoryAddress, data: ROCKET_POOL_SELECTORS.megapoolFactoryGetMegapoolDeployed + arg, blockTag })
+    ]);
+    const expectedMegapoolAddress = decodeAddressResult(expectedRaw);
+    const mappedMegapoolAddress = decodeAddressResult(mappedRaw);
+    const factoryDeploymentFlag = deployedRaw ? decodeBoolResult(deployedRaw) : null;
+    const target = megapoolAddress.toLowerCase();
+    const checks = {
+      nodeGetterReturnedAddress: true,
+      expectedAddressMatches: expectedMegapoolAddress === target,
+      nodeManagerMappingMatches: mappedMegapoolAddress === target,
+      factoryDeploymentFlag: factoryDeploymentFlag === true
+    };
+    return { ...base, checked: true, valid: Object.values(checks).every(Boolean),
+      nodeManagerAddress, factoryAddress, nodeAddress, expectedMegapoolAddress,
+      mappedMegapoolAddress, factoryDeploymentFlag, checks };
+  } catch (error) {
+    return { ...base, checked: true, error: error.message };
   }
 }
 
@@ -266,13 +353,17 @@ export async function fetchCrossLayerSnapshot({
   protocolVersion = 'saturn-1',
   explorerBaseUrl,
   clExplorerBaseUrl
-  ,expectedChainId = null
+  ,expectedChainId = null,
+  rocketStorageAddress = null
 }) {
   const deployment = await verifyMegapoolDeployment({
     rpcUrl: elRpcUrl,
     megapoolAddress,
     blockTag,
     expectedChainId
+  });
+  const provenance = await verifyMegapoolProvenance({
+    rpcUrl: elRpcUrl, megapoolAddress, network, blockTag, rocketStorageAddress
   });
   const elData = await fetchExecutionState({
     rpcUrl: elRpcUrl,
@@ -295,6 +386,7 @@ export async function fetchCrossLayerSnapshot({
       executionBlock: elData.executionBlock,
       protocolVersion,
       deployment,
+      provenance,
       explorerBaseUrl,
       clExplorerBaseUrl,
       generatedAt: new Date().toISOString()

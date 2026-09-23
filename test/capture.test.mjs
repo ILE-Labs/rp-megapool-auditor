@@ -150,7 +150,7 @@ test('CLI --all audits every live validator slot and verifies deployment metadat
     const baseUrl = await mock.listen();
     const { stdout } = await execFileAsync(process.execPath, [
       'src/cli.mjs', '--all', '--megapool', '0x1111111111111111111111111111111111111111',
-      '--el-rpc', baseUrl, '--cl-rpc', baseUrl, '--network', 'hoodi', '--chain-id', '1337', '--format', 'json'
+      '--el-rpc', baseUrl, '--cl-rpc', baseUrl, '--network', 'testnet', '--chain-id', '1337', '--format', 'json'
     ]);
     const report = JSON.parse(stdout);
     assert.equal(report.validatorCount, 2);

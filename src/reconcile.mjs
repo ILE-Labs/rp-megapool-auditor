@@ -107,6 +107,48 @@ export function reconcileValidator(input) {
     return { schemaVersion: '0.1.0', generatedAt: metadata.generatedAt ?? new Date().toISOString(), ...base, findings };
   }
 
+  if (metadata.provenance && metadata.provenance.checked && !metadata.provenance.valid) {
+    const explicitMismatch = metadata.provenance.error === null
+      && metadata.provenance.checks
+      && Object.values(metadata.provenance.checks).some(value => value === false);
+    findings.push(finding({
+      ruleId: 'DEPLOYMENT-002',
+      status: explicitMismatch ? 'ACTION_REQUIRED' : 'INCONCLUSIVE',
+      severity: 'high',
+      explanation: explicitMismatch
+        ? 'The supplied deployed contract failed the canonical Rocket Pool Megapool provenance checks.'
+        : 'The supplied address was not proven to be the canonical Rocket Pool Megapool for its node through RocketStorage, MegapoolFactory, and NodeManager.',
+      operatorAction: explicitMismatch
+        ? 'Do not interpret this address as Rocket Pool Megapool state; verify the address and select the canonical registry-derived deployment.'
+        : 'Verify the network, RocketStorage registry, factory expected address, and NodeManager mapping before trusting cross-layer findings.',
+      deadline: 'Before acting on this audit.',
+      risk: 'A different protocol contract or stale deployment could be interpreted as Rocket Pool state.',
+      limitation: metadata.provenance.error || 'Canonical provenance checks did not all agree.',
+      evidence: { provenance: metadata.provenance }
+    }));
+  }
+
+  // Do not silently combine a historical execution block with the current
+  // finalized Beacon state. Without a matching CL state identifier, the
+  // evidence is useful for investigation but cannot support a synchronized
+  // lifecycle claim.
+  const historicalExecution = metadata.elBlockTag !== undefined
+    && metadata.elBlockTag !== null
+    && !['latest', 'pending', 'safe', 'finalized'].includes(String(metadata.elBlockTag));
+  if (historicalExecution && !metadata.clStateId) {
+    findings.push(finding({
+      ruleId: 'TEMPORAL-001',
+      status: 'INCONCLUSIVE',
+      severity: 'high',
+      explanation: 'The execution-layer evidence is historical, but no matching historical Beacon state was supplied.',
+      operatorAction: 'Provide a Beacon state identifier from the same point in time before treating lifecycle states as cross-layer evidence.',
+      deadline: 'Before using this report to claim an exiting, withdrawn, or settled cross-layer state.',
+      risk: 'Current Beacon data can make a historical execution transition appear synchronized when it is not.',
+      limitation: 'The auditor preserves the historical execution evidence but does not infer a historical consensus-layer status.',
+      evidence: { elBlockTag: metadata.elBlockTag, clStateId: metadata.clStateId ?? null }
+    }));
+  }
+
   // 1. Version Check
   if (!metadata.protocolVersion || !SUPPORTED_VERSIONS.has(metadata.protocolVersion)) {
     findings.push(finding({

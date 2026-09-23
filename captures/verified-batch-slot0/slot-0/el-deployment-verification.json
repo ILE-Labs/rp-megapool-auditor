@@ -1,9 +1,0 @@
-{
-  "addressValid": true,
-  "chainId": 560048,
-  "expectedChainId": 560048,
-  "codePresent": true,
-  "chainMatches": true,
-  "valid": true,
-  "error": null
-}

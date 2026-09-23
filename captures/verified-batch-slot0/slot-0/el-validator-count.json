@@ -1,9 +1,0 @@
-{
-  "url": "https://rpc.hoodi.ethpandaops.io",
-  "timestamp": "2026-09-23T11:38:53.770Z",
-  "elapsedMs": 244,
-  "status": 200,
-  "body": "{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":\"0x00000000000000000000000000000000000000000000000000000000000003e8\"}",
-  "error": null,
-  "calldata": "0x7071688a"
-}

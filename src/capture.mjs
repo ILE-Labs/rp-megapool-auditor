@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { encodeGetValidatorCount, encodeGetValidatorDetails, decodeValidatorInfoAndPubkey } from './megapool.mjs';
 import { decodeUint256, splitWords, decodeBool } from './evm.mjs';
-import { fetchBeaconFinalizedEpoch, verifyMegapoolDeployment } from './adapters.mjs';
+import { fetchBeaconFinalizedEpoch, verifyMegapoolDeployment, verifyMegapoolProvenance } from './adapters.mjs';
 
 function printHelp() {
   console.log(`
@@ -42,6 +42,7 @@ OPTIONS:
   --val-index <n>        Validator slot index inside Megapool (default: 0)
   --block <tag>          EL block tag (default: latest)
   --chain-id <number>    Expected EL chain ID (recommended for live captures)
+  --rocket-storage <address> Canonical RocketStorage address (optional override)
   --protocol-version <v> Protocol ruleset pin (default: saturn-1)
   --out <dir>            Output directory for capture bundle (default: capture/)
   --help                 Show this help
@@ -124,6 +125,7 @@ async function run() {
   const blockTag = get('block', 'latest');
   const expectedChainIdRaw = get('chain-id', null);
   const expectedChainId = expectedChainIdRaw === null ? null : Number(expectedChainIdRaw);
+  const rocketStorageAddress = get('rocket-storage', null);
   const protocolVersion = get('protocol-version', 'saturn-1');
   const outDir = get('out', 'capture');
 
@@ -154,6 +156,11 @@ async function run() {
     blockTag,
     expectedChainId
   });
+  const provenance = await verifyMegapoolProvenance({
+    rpcUrl: elRpc, megapoolAddress, network, blockTag, rocketStorageAddress
+  });
+  writeCapture(outDir, 'el-provenance-verification.json', provenance);
+  console.log(`         → canonical=${provenance.valid ? 'verified' : 'not verified'}${provenance.error ? ` (${provenance.error})` : ''}`);
   writeCapture(outDir, 'el-deployment-verification.json', deployment);
   console.log(`         → chain ${deployment.chainId ?? 'FAILED'}, code=${deployment.codePresent ? 'present' : 'absent'}, valid=${deployment.valid}`);
 
@@ -276,7 +283,8 @@ async function run() {
       clRpcUrl: clBase,
       elBlockTag: blockTag,
       expectedChainId,
-      deployment
+      deployment,
+      provenance
     },
     contract: contractState
       ? { ...contractState, validatorId: `slot-${valSlot}` }
@@ -318,6 +326,7 @@ async function run() {
     expectedChainId,
     protocolVersion,
     deployment,
+    provenance,
     executionBlock,
     finalizedEpoch,
     overallStatus: report.findings[0]?.status ?? 'UNKNOWN',
@@ -330,6 +339,7 @@ async function run() {
       'cl-finalized-header.json',
       `cl-validator-${beaconTarget}.json`,
       'el-deployment-verification.json',
+      'el-provenance-verification.json',
       'snapshot.json',
       'report.json',
       'report.md',

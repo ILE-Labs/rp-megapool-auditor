@@ -5,6 +5,11 @@ Smartnode output, but the checked-in live captures do not yet contain output
 from a real Smartnode installation. The synthetic comparison in the test suite
 is a parser test, not operator confirmation.
 
+The environment used for the live captures does not have the `rocketpool`
+Smartnode CLI installed. No Smartnode output is therefore being claimed as
+captured or compared. The comparison remains an explicit external validation
+step, not a completed acceptance criterion.
+
 ## Required capture
 
 On a Rocket Pool node using the same network and Megapool address as the

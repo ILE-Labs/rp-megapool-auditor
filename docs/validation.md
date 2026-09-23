@@ -10,6 +10,7 @@
 - Replays captured evidence without network access.
 - Runs through automated tests and CI.
 - Validates live execution-chain identity, bytecode presence, and requested protocol ruleset before using live data.
+- Verifies canonical Rocket Pool provenance through RocketStorage, MegapoolFactory, and NodeManager; bytecode alone is not sufficient.
 - Supports a live `--all` scan over every validator slot returned by `getValidatorCount()`.
 
 ## Live observations
@@ -61,12 +62,19 @@ node src/cli.mjs \
   --format json
 ```
 
-The tool checks address format, `eth_chainId`, and non-empty bytecode. These
-checks prove that code exists at the supplied address on the queried chain;
-they do not by themselves prove that the address is the intended official
-Rocket Pool deployment. The current Saturn ABI also omits some accounting
-flags, so the auditor retains `INCONCLUSIVE` results where execution state
-cannot be proven.
+The tool checks address format, `eth_chainId`, non-empty bytecode, and the
+canonical Rocket Pool registry relationship. For Hoodi and mainnet it follows
+RocketStorage to the current MegapoolFactory and NodeManager, reads the node
+address from the supplied Megapool, and requires the factory expected address,
+NodeManager mapping, and factory deployment flag to agree. If the canonical
+registry cannot be queried, the result is `DEPLOYMENT-002 INCONCLUSIVE`.
+The current Saturn ABI also omits some accounting flags, so the auditor retains
+`INCONCLUSIVE` results where execution state cannot be proven.
+
+Historical execution blocks are also marked `TEMPORAL-001` unless a matching
+Beacon state identifier is supplied. This prevents a historical execution
+transition from being combined silently with the current finalized Beacon
+state.
 
 See [operator validation](operator-validation.md) and [lifecycle evidence](lifecycle-evidence.md)
 for the external confirmation and real-capture gates that remain open.

@@ -6,6 +6,7 @@ coverage/
 *.log
 .DS_Store
 
-# Local RPC captures and operator-specific output
-captures/local-*/
+# RPC responses and operator-specific output stay local. They may contain
+# public validator identifiers, provider URLs, and verbose response payloads.
+captures/
 reports/

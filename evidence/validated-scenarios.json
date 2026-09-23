@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1.0.0",
+  "purpose": "Publishable summary of locally retained validation runs.",
+  "rawCapturePolicy": "Raw RPC responses remain local and are ignored by Git.",
+  "scenarios": [
+    {
+      "id": "hoodi-active-slot-0",
+      "network": "hoodi",
+      "executionState": "active",
+      "beaconState": "active_ongoing",
+      "result": "HEALTHY",
+      "canonicalProvenance": true
+    },
+    {
+      "id": "hoodi-active-slot-1",
+      "network": "hoodi",
+      "executionState": "active",
+      "beaconState": "active_ongoing",
+      "result": "HEALTHY",
+      "canonicalProvenance": true
+    },
+    {
+      "id": "hoodi-foreign-contract-negative-control",
+      "network": "hoodi",
+      "executionState": "deployed-but-not-confirmed-as-megapool",
+      "beaconState": "not-used-as-protocol-evidence",
+      "result": "INCONCLUSIVE",
+      "canonicalProvenance": false
+    },
+    {
+      "id": "hoodi-completed-withdrawal",
+      "network": "hoodi",
+      "executionState": "withdrawn",
+      "beaconState": "withdrawal_done",
+      "result": "INCONCLUSIVE",
+      "canonicalProvenance": true
+    }
+  ],
+  "not_claimed": [
+    "No production incident was detected.",
+    "No synchronized Rocket Pool exiting capture is included.",
+    "No Smartnode CLI comparison is included."
+  ]
+}

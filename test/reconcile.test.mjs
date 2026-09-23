@@ -166,6 +166,56 @@ test('Rule VERSION-001: unsupported protocol version yields UNSUPPORTED_VERSION'
   assert.equal(f.severity, 'high');
 });
 
+test('Rule TEMPORAL-001: historical EL without matching CL state is inconclusive', () => {
+  const report = reconcile({
+    metadata: { network: 'hoodi', megapoolAddress: '0x1111111111111111111111111111111111111111', elBlockTag: '0x264cb0', protocolVersion: 'saturn-1' },
+    contract: { validatorId: 'slot-0', state: 'exit_in_progress', beaconIndex: 1269872 },
+    beacon: { validatorIndex: 1269872, status: 'withdrawal_done', exitEpoch: 84617, withdrawableEpoch: 84873, finalizedEpoch: 124567 }
+  });
+  assert.equal(report.findings[0].ruleId, 'TEMPORAL-001');
+  assert.equal(report.findings[0].status, 'INCONCLUSIVE');
+});
+
+test('Rule DEPLOYMENT-002: unproven canonical provenance is inconclusive', () => {
+  const report = reconcile({
+    metadata: {
+      network: 'hoodi',
+      megapoolAddress: '0x1111111111111111111111111111111111111111',
+      protocolVersion: 'saturn-1',
+      provenance: { checked: true, valid: false, error: 'factory expected address did not match supplied address' }
+    },
+    contract: { validatorId: 'slot-0', state: 'active' },
+    beacon: { status: 'active_ongoing', finalizedEpoch: 100 }
+  });
+  assert.equal(report.findings[0].ruleId, 'DEPLOYMENT-002');
+  assert.equal(report.findings[0].status, 'INCONCLUSIVE');
+});
+
+test('Rule DEPLOYMENT-002: explicit provenance mismatch is actionable', () => {
+  const report = reconcile({
+    metadata: {
+      network: 'hoodi',
+      megapoolAddress: '0x1111111111111111111111111111111111111111',
+      deployment: { valid: true },
+      provenance: {
+        checked: true,
+        valid: false,
+        error: null,
+        checks: {
+          nodeGetterReturnedAddress: false,
+          expectedAddressMatches: false,
+          nodeManagerMappingMatches: false,
+          factoryDeploymentFlag: false
+        }
+      }
+    },
+    contract: { state: 'active' },
+    beacon: { status: 'active_ongoing' }
+  });
+  const finding = report.findings.find(item => item.ruleId === 'DEPLOYMENT-002');
+  assert.equal(finding.status, 'ACTION_REQUIRED');
+});
+
 test('Batch Megapool reconciliation reconciles multi-validator pools', () => {
   const report = reconcile(loadFixture('megapool_batch'));
   assert.equal(report.validatorCount, 3);
