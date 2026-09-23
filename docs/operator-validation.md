@@ -41,23 +41,3 @@ The gate is satisfied only when one of the following is public:
 The current repository has neither confirmation nor a real Smartnode capture.
 No grant or production-integration claim should state otherwise.
 
-## Discussion-thread request
-
-The application thread is reserved for applications. Ask for technical review
-in the Round 41 discussion thread instead:
-
-> ILE Labs has published a read-only Megapool cross-layer checker with a live
-> Hoodi capture and replayable evidence. We are looking for one Rocket Pool
-> node operator or maintainer to validate the operator-facing interpretation.
-> In particular, we would like to compare one report against the output of
-> `rocketpool megapool status` and `rocketpool megapool validators` for the
-> same Megapool and validator slot. The tool deliberately reports missing
-> Saturn ABI accounting fields as `INCONCLUSIVE` rather than inferring them.
->
-> If someone can provide a redacted Smartnode capture or confirm that the
-> comparison is useful, we will publish the comparison and adjust the tool to
-> the current operator workflow. We are not asking anyone to run transactions
-> or expose private keys.
-
-Do not describe the operator gate as complete until a named operator or
-maintainer replies, or a public comparison is independently reviewed.
